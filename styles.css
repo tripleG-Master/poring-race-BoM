@@ -1,0 +1,94 @@
+body {
+    width: 100%;
+    height: 100%;
+    background-color: #343455;
+}
+
+.list-group-item {
+    background-color: transparent;
+    border-top: 1px solid #ddd;
+    border-radius: 0;
+    color: #fff;
+}
+
+#game {
+    width: 100%;
+    height: 1024px;
+    position: absolute;
+    overflow: hidden;
+    background-image: url("BG01_03_03.png");
+    background-size: auto 300px;
+}
+
+.bg {
+    width: 2048px;
+    height: 1024px;
+    position: absolute;
+    top: 0;
+    background-repeat: no-repeat;
+}
+
+#props,
+#players {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.player {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background-repeat: no-repeat;
+    background-size: 1200px 200px;
+    font-weight: bold;
+    padding-top: 80px;
+    font-size: 30px;
+    line-height: 1;
+}
+
+.fatigue-indicator {
+    margin-right: -50px;
+    width: 50px;
+    height: auto;
+    position: relative;
+    top: 0;
+    left: 50px;
+    display: none;
+}
+
+.participant-names {
+    width: 100%;
+    height: 180px;
+}
+
+.poring-catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+}
+
+.poring-card {
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.875rem;
+    gap: 6px;
+    padding: 8px;
+}
+
+.poring-preview {
+    background-position: left top;
+    background-repeat: no-repeat;
+    background-size: auto 96px;
+    height: 96px;
+    width: 96px;
+}
+
+.winner-name {
+    font-size: 2rem;
+    font-weight: 700;
+}
