@@ -1,17 +1,21 @@
-# poringrace
+# Poring Race
 
-A small raffle script to decide winners. Runs live at [GitHub Pages](https://borf.github.io/poringrace/).
+Minijuego de carreras para elegir un ganador entre participantes.
 
-## Sound effects
+## Sonidos
 
-Add audio files (`.mp3`, `.ogg`, `.wav`, `.m4a`, `.aac`, `.opus`, or `.flac`) directly to `sfx/` and push them to the `main` branch. The game reads the public GitHub repository's `sfx/` directory when it loads, so new files appear in the sound selectors without editing `index.html`.
+Los sonidos se cargan desde los archivos locales de `sfx/`; el juego no necesita consultar GitHub. Las opciones de salida, fatiga, efecto aleatorio y victoria se configuran en el modal y pueden desactivarse individualmente.
 
-The four sound events can each be enabled or disabled and assigned any discovered sound. The repository must remain public for the browser to read its sound catalog.
+Las skills de `sfx/skills/` se eligen al azar y no están vinculadas a un participante. Cada sonido usa una instancia compartida; `BragisPoem` no se reinicia mientras sigue reproduciéndose, evitando que se superpongan varias reproducciones de esa skill.
 
-## Project layout
+Desde **Opciones** se puede ajustar la frecuencia de skills en 10 niveles, elegir un sonido de fondo (por defecto `BragisPoem.mp3`) y elegir el largo de la pista en 5 posiciones, de 50 cc a 200 cc. El sonido de fondo se repite durante la carrera y se detiene al declararse el ganador.
 
-- `index.html` contains the page structure.
-- `styles.css` contains the presentation and layout.
-- `js/race.js` contains race setup, scenery, animation, and winner handling.
-- `js/sound-manager.js` discovers and plays sounds from `sfx/`.
+Para agregar o quitar sonidos, actualizá el catálogo local de `js/sound-manager.js` junto con los archivos de `sfx/`.
+
+## Estructura
+
+- `index.html`: estructura de la página y controles del modal.
+- `styles.css`: presentación y layout.
+- `js/race.js`: configuración, pista, animación y resultado de la carrera.
+- `js/sound-manager.js`: catálogo local, asignaciones y reproducción de sonidos.
 

@@ -3,64 +3,94 @@ import { SoundManager } from "./sound-manager.js";
 const SCENE_WIDTH = 2048;
 const PLAYER_FRAME_WIDTH = 200;
 const PLAYER_FRAME_COUNT = 6;
+const RACE_CC_VALUES = [50, 87.5, 125, 162.5, 200];
 
 class PoringRace {
     constructor() {
         this.scroll = 0;
         this.players = [];
-        this.totalPlayerCount = 0;
+        this.playerNames = [];
         this.winner = -1;
         this.length = 0;
         this.timer = null;
+        this.startTimer = null;
+        this.finishTimer = null;
+        this.nextRandomSoundAt = 0;
+        this.nextSkillSoundAt = 0;
         this.modal = new bootstrap.Modal(document.getElementById("myModal"), {
             backdrop: "static",
             keyboard: false,
         });
         this.soundManager = new SoundManager();
 
-        this.buildPoringCatalog();
         this.bindControls();
         this.soundManager.load();
+        this.updateOptionLabels();
         this.modal.show();
     }
 
     bindControls() {
         $("#startRace, #repeatRace").on("click", () => this.start());
         $("#shuffleParticipants").on("click", () => this.shufflePlayers());
+        $("#openOptions").on("click", () => this.showRaceOptions());
+        $("#backToSetup").on("click", () => this.showRaceSetup());
         $("#editRace").on("click", () => this.showRaceSetup());
-    }
-
-    buildPoringCatalog() {
-        const gallery = $("#poringGallery");
-        for (let i = 0; i < 102; i++) {
-            const card = $("<div class='poring-card'></div>");
-            const preview = $("<div class='poring-preview' aria-hidden='true'></div>");
-            preview.css("background-image", "url('art/" + i + ".png')");
-            card.append(preview);
-            card.append($("<span></span>").text("Poring " + String(i).padStart(3, "0")));
-            gallery.append(card);
-        }
+        $("#skillFrequency, #raceLength").on("input", () => this.updateOptionLabels());
     }
 
     showRaceSetup() {
-        $("#raceSetup, #setupActions").show();
-        $("#raceResult, #resultActions").hide();
+        $("#raceSetup, #setupActions").prop("hidden", false);
+        $("#raceOptions, #optionsActions, #raceResult, #resultActions").prop("hidden", true);
+        $("#setupError").prop("hidden", true).text("");
+    }
+
+    showRaceOptions() {
+        $("#raceSetup, #setupActions, #raceResult, #resultActions").prop("hidden", true);
+        $("#raceOptions, #optionsActions").prop("hidden", false);
+    }
+
+    updateOptionLabels() {
+        const frequency = Number($("#skillFrequency").val());
+        const raceLength = Number($("#raceLength").val());
+        $("#skillFrequencyValue").text(frequency + " / 10");
+        $("#raceLengthValue").text(String(RACE_CC_VALUES[raceLength]).replace(".", ",") + " cc");
     }
 
     start() {
-        const playerNames = $("#names").val().trim().split("\n");
-        this.totalPlayerCount = playerNames.length;
+        const playerNames = $("#names").val()
+            .split(/\r?\n/)
+            .map(name => name.trim())
+            .filter(Boolean);
+        const lengthValue = $("#raceLength").val();
+        const length = Number(lengthValue);
+
+        if (playerNames.length === 0) {
+            this.showSetupError("Agregá al menos un participante para iniciar la carrera.");
+            return;
+        }
+        if (lengthValue === "" || !Number.isInteger(length) || length < 0 || length >= RACE_CC_VALUES.length) {
+            this.showSetupError("Elegí uno de los cinco largos disponibles para la carrera.");
+            return;
+        }
+
+        this.clearTimers();
+        this.playerNames = playerNames;
         this.players = [];
         this.winner = -1;
         this.scroll = 0;
-        this.length = parseInt($("#length").val(), 10);
+        this.length = length;
         this.showRaceSetup();
         this.buildCourse();
 
         playerNames.forEach(name => this.addPlayer(name));
         this.addProps();
+        this.soundManager.playMusic($("#raceMusic").val());
         this.startRace();
         this.modal.hide();
+    }
+
+    showSetupError(message) {
+        $("#setupError").text(message).prop("hidden", false);
     }
 
     buildCourse() {
@@ -87,7 +117,7 @@ class PoringRace {
 
     addPlayer(name) {
         const playerIndex = this.players.length;
-        const y = parseInt(250 + playerIndex * (600 / this.totalPlayerCount), 10);
+        const y = parseInt(250 + playerIndex * (600 / this.playerNames.length), 10);
         const sprite = Math.floor(Math.random() * 102);
         this.players.push({
             position: 400,
@@ -137,15 +167,33 @@ class PoringRace {
     }
 
     startRace() {
-        window.setTimeout(() => {
+        this.startTimer = window.setTimeout(() => {
+            this.soundManager.play("race");
+            const now = Date.now();
+            this.nextRandomSoundAt = now + 1500;
+            this.nextSkillSoundAt = now + this.getSkillInterval();
             this.timer = window.setInterval(() => this.updateRace(), 1000 / 60);
         }, 1000);
     }
 
+    getSkillInterval() {
+        const frequency = Number($("#skillFrequency").val());
+        const averageInterval = 20000 - (frequency - 1) * (16000 / 9);
+        return averageInterval * (0.8 + Math.random() * 0.4);
+    }
+
     updateRace() {
-        this.soundManager.play("race");
-        if (Math.random() < 0.01)
-            this.soundManager.play("random");
+        if (this.winner === -1) {
+            const now = Date.now();
+            if (now >= this.nextRandomSoundAt) {
+                this.soundManager.play("random");
+                this.nextRandomSoundAt = now + 2000 + Math.random() * 2000;
+            }
+            if (now >= this.nextSkillSoundAt) {
+                this.soundManager.playRandomSkill();
+                this.nextSkillSoundAt = now + this.getSkillInterval();
+            }
+        }
 
         const divs = $("#game").children(".bg");
         const oldScroll = this.scroll;
@@ -193,10 +241,11 @@ class PoringRace {
             this.advanceFrame(player);
 
             if (player.position > 5308 + SCENE_WIDTH * this.length) {
-                this.soundManager.play("victory");
                 player.speed = 3;
                 this.winner = index;
-                window.setTimeout(() => this.finishRace(), 5000);
+                this.soundManager.stopMusic();
+                this.soundManager.play("victory");
+                this.finishTimer = window.setTimeout(() => this.finishRace(), 5000);
             }
         });
 
@@ -222,17 +271,30 @@ class PoringRace {
 
     finishRace() {
         window.clearInterval(this.timer);
+        this.timer = null;
+
         if ($("#removewinner").is(":checked")) {
-            const playerNames = $("#names").val().trim().split("\n")
-                .filter(name => name !== this.players[this.winner].name);
-            $("#names").val(playerNames.join("\n"));
+            this.playerNames.splice(this.winner, 1);
+            $("#names").val(this.playerNames.join("\n"));
         }
 
-        $("#winner").text(this.players[this.winner].name);
-        $("#repeatRace").prop("disabled", !$("#names").val().trim());
-        $("#raceSetup, #setupActions").hide();
-        $("#raceResult, #resultActions").show();
+        $("#winner").text(this.players[this.winner].name + " ganó la carrera.");
+        $("#repeatRace").prop("disabled", this.playerNames.length === 0);
+        $("#raceSetup, #raceOptions, #setupActions, #optionsActions").prop("hidden", true);
+        $("#raceResult, #resultActions").prop("hidden", false);
         this.modal.show();
+    }
+
+    clearTimers() {
+        if (this.timer !== null)
+            window.clearInterval(this.timer);
+        if (this.startTimer !== null)
+            window.clearTimeout(this.startTimer);
+        if (this.finishTimer !== null)
+            window.clearTimeout(this.finishTimer);
+        this.timer = null;
+        this.startTimer = null;
+        this.finishTimer = null;
     }
 
     shuffle(array) {
@@ -246,12 +308,12 @@ class PoringRace {
     }
 
     shufflePlayers() {
-        const playerNames = $("#names").val().trim().split("\n");
+        const playerNames = $("#names").val()
+            .split(/\r?\n/)
+            .map(name => name.trim())
+            .filter(Boolean);
         $("#names").val(this.shuffle(playerNames).join("\n"));
     }
 }
 
-$(function()
-{
-    new PoringRace();
-});
+$(() => new PoringRace());

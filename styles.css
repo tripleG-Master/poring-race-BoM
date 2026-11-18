@@ -1,14 +1,27 @@
+/* fuentes */
+
+.bbh-bogle-regular {
+  font-family: "BBH Bogle", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.BoM-title {
+  font-family: "BBH Bogle", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  color:goldenrod;
+  letter-spacing: 0.03em;
+}
+
 body {
     width: 100%;
     height: 100%;
     background-color: #343455;
 }
 
-.list-group-item {
-    background-color: transparent;
-    border-top: 1px solid #ddd;
-    border-radius: 0;
-    color: #fff;
+[hidden] {
+    display: none !important;
 }
 
 #game {
@@ -59,36 +72,49 @@ body {
 
 .participant-names {
     width: 100%;
-    height: 180px;
+    height: 140px;
 }
 
-.poring-catalog-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 12px;
+.sound-settings {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
 }
 
-.poring-card {
-    align-items: center;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+.sound-settings summary {
+    cursor: pointer;
+}
+
+.range-value {
+    display: block;
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.range-endpoints {
+    color: #6c757d;
     display: flex;
-    flex-direction: column;
     font-size: 0.875rem;
-    gap: 6px;
-    padding: 8px;
+    justify-content: space-between;
 }
 
-.poring-preview {
-    background-position: left top;
-    background-repeat: no-repeat;
-    background-size: auto 96px;
-    height: 96px;
-    width: 96px;
+.sound-setting-row {
+    align-items: center;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(125px, 1fr) minmax(180px, 2fr);
+    margin-bottom: 0.5rem;
 }
 
 .winner-name {
     font-size: 2rem;
     font-weight: 700;
+}
+
+@media (max-width: 575.98px) {
+    .sound-setting-row {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
 }
